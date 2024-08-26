@@ -8,6 +8,8 @@ from bs4 import BeautifulSoup as bs
 import time
 import logging
 from setlog import setlog
+import os
+
 logging = setlog()
 
 class TradeSpider(object):
@@ -17,12 +19,16 @@ class TradeSpider(object):
 
     # Method to set up the web driver
     def setDriver(self):
-        self.driver = webdriver.PhantomJS()  # Initialize the PhantomJS driver
-        # Uncomment the below code to use Firefox with headless options
         options = Options()
-        options.add_argument("--headless")
-        self.driver = webdriver.Firefox(
-        firefox_options=options, executable_path='./geckodriver')
+        options.add_argument("--headless")  # Run Firefox in headless mode
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        
+        # Use the local path for geckodriver
+        geckodriver_path = './geckodriver'  # Path is relative to the current directory
+
+        # Initialize Firefox WebDriver with headless options
+        self.driver = webdriver.Firefox(options=options, executable_path=geckodriver_path)
 
     # Method to log in to the website
     def login(self, ac, pw):
@@ -45,11 +51,11 @@ class TradeSpider(object):
             EC.element_to_be_clickable(
                 (By.XPATH, '//*[@id="PageContent_Login1_Password"]'))).send_keys(pw)
         # Click the login button
-        self.driver.find_element_by_xpath(
+        self.driver.find_element(By.XPATH,
             '//*[@id="PageContent_Login1_Button"]').click()
 
         # Check if the login was successful
-        self.driver.switch_to_default_content()
+        self.driver.switch_to.default_content()
         soup = bs(self.driver.page_source, "lxml")
         if "Trade Map" in soup.title.text:
             logging.info("ITC login success!")  # Log successful login
@@ -120,7 +126,7 @@ class TradeSpider(object):
 
     # Method to save the extracted data
     def save(self, filename):
-        table_source = self.driver.find_element_by_xpath(
+        table_source = self.driver.find_element(By.XPATH,
             '/html/body/form/div[3]/table/tbody/tr[3]/td').get_attribute('innerHTML')
         df = pd.read_html(table_source)[0]  # Parse the table data into a DataFrame
         df.to_pickle(filename+'.pickle')  # Save the DataFrame to a pickle file
@@ -128,14 +134,14 @@ class TradeSpider(object):
 
     # Method to display the DataFrame
     def showdf(self):
-        table_source = self.driver.find_element_by_xpath(
+        table_source = self.driver.find_element(By.XPATH,
             '/html/body/form/div[3]/table/tbody/tr[3]/td').get_attribute('innerHTML')
         df = pd.read_html(table_source)[0]  # Parse the table data into a DataFrame
         print(df.head())  # Print the first few rows of the DataFrame
 
     # Method to close the web driver
     def close(self):
-        self.driver.close()  # Close the driver
+        self.driver.quit()  # Quit the driver to close all windows
         logging.info("Close Driver!!")  # Log the driver closure
 
 if __name__ == "__main__":
