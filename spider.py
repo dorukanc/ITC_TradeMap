@@ -33,17 +33,20 @@ class TradeSpider(object):
         self.driver = webdriver.Firefox(service=service, options=options)
     
     #Method to login to trademap.org
-   def login(self, ac, pw):
+    def login(self, ac, pw):
         # Step 1: Navigate to the initial page
-        initial_url = "https://www.trademap.org/Country_SelProduct_TS.aspx"
-        self.driver.get(initial_url)
-        wait = WebDriverWait(self.driver, 20)
+        url = "https://www.trademap.org/Country_SelProduct_TS.aspx"
+        self.driver.get(url)
+        wait = WebDriverWait(self.driver, 10)
 
-        # Step 2: Click the login button to navigate to the login page
+        # Step 2: Click the initial login button to navigate to the login page
         try:
             logging.debug("Attempting to click the initial login button.")
-            login_button = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/form/div[3]/div[5]/ul/li/a')))
-            login_button.click()
+            wait.until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, '/html/body/form/div[3]/div[5]/ul/li/a')  # Updated XPath
+                )
+            ).click()
         except TimeoutException:
             logging.error("Initial login button not found or not clickable.")
             return
@@ -53,7 +56,7 @@ class TradeSpider(object):
             logging.debug("Waiting for the login page to load.")
             wait.until(EC.url_contains("idserv.marketanalysis.intracen.org/Account/Login"))
         except TimeoutException:
-            logging.error("Login page did not load correctly. Current URL: {self.driver.current_url}")
+            logging.error(f"Login page did not load correctly. Current URL: {self.driver.current_url}")
             return
 
         # Step 4: Enter username and password on the login page
@@ -175,7 +178,7 @@ class TradeSpider(object):
         logging.info("Close Driver!!")  # Log the driver closure
 
 if __name__ == "__main__":
-    ac = "chroma.favours@icloud.com"  # Account username
+    ac = "chroma.favours-0u@icloud.com"  # Account username
     pw = "PKNrKASJRZzYt4?*=)"  # Account password
     s = TradeSpider()  # Instantiate the TradeSpider class
     s.setDriver()  # Set up the web driver

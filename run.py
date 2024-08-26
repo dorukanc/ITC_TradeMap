@@ -19,7 +19,7 @@ Execution steps:
 '''
 
 # Login credentials
-ac = "chroma.favours@icloud.com"
+ac = "chroma.favours-0u@icloud.com"
 pw = "PKNrKASJRZzYt4?*=)"
 pdir = "./pickle/"  # Directory for storing pickle files
 
