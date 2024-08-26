@@ -1,75 +1,79 @@
 from matplotlib.cbook import flatten
 import pandas as pd
 
-
 def parser_row_val(df, row_no, item_no):
     '''
-    解析每一行 row values的資料 將交易量做單位換算為公斤後回傳 allrow
+    Parses data from each row of a DataFrame and converts trade volumes to kilograms.
 
-    df: pd.read_html(table_source)
-    row_no: html table's row number
-    item_no:產品項目
+    Parameters:
+    df (DataFrame): The DataFrame obtained from reading an HTML table using pd.read_html.
+    row_no (int): The row number in the HTML table to parse.
+    item_no (str): The product item number.
 
-    allrow : list data [[]]
+    Returns:
+    allrow (list): A list of lists containing parsed and converted data for the specified row.
     '''
-    # 單位轉換
+    
+    # Function to convert units to kilograms or standardized units
     def unit_transform(arg):
         if (arg[0] == "0") or (arg[0] == 'No Quantity'):
-            return 0.0
+            return 0.0  # If the quantity is 0 or 'No Quantity', return 0.0
         elif arg[1] == "Tons":
-            return float(arg[0]) * 907.18474
+            return float(arg[0]) * 907.18474  # Convert tons to kilograms
         elif arg[1] == "Pounds":
-            return float(arg[0]) * 0.45359237
+            return float(arg[0]) * 0.45359237  # Convert pounds to kilograms
         elif arg[1] == "Hundreds units":
-            return float(arg[0]) * 100
+            return float(arg[0]) * 100  # Convert hundreds of units to actual units
         elif arg[1] == "Thousands units":
-            return float(arg[0]) * 1000
+            return float(arg[0]) * 1000  # Convert thousands of units to actual units
         elif arg[1] in ["Dozens", "Heads"]:
-            return 0.0
+            return 0.0  # Return 0 for non-quantifiable units like Dozens and Heads
         elif arg[1] in ["Kilograms", 'Units', 'Unit', 'Mixed']:
-            return float(arg[0])
+            return float(arg[0])  # If already in standardized units, return the quantity directly
 
-    country_a = "world"
-    #     row_no = 3
-    country_b = df.loc[row_no][1]
-    row_val = df.loc[row_no][2:].tolist()
+    country_a = "world"  # Default value for the source country
+    country_b = df.loc[row_no][1]  # The destination country from the specified row in the DataFrame
+    row_val = df.loc[row_no][2:].tolist()  # All data from the row except for the country names
 
-    date_list = df.loc[0][2:].dropna().tolist()
+    date_list = df.loc[0][2:].dropna().tolist()  # Extracts date information from the first row
     if "in" in date_list[0]:
-        date_list = [x.split("in ")[1] for x in date_list]  # 只保留 date
-    date_list = list(flatten(zip(date_list, date_list)))  # 複製一份 date
+        date_list = [x.split("in ")[1] for x in date_list]  # Extract only the date, removing any prefix like "in "
+    date_list = list(flatten(zip(date_list, date_list)))  # Duplicate each date to match the format in row_val
 
-    # parser row_val value
+    # Parse and convert each value in row_val
     allrow = []
     for i in range(0, len(row_val), 2):
-        arg = (row_val[i], row_val[i + 1])
-        v = unit_transform(arg)
-        row = [country_a, country_b, item_no, date_list[i], v]
-        allrow.append(row)
-    return allrow
-
+        arg = (row_val[i], row_val[i + 1])  # Each 'arg' is a tuple of quantity and unit
+        v = unit_transform(arg)  # Convert the quantity to kilograms or standardized units
+        row = [country_a, country_b, item_no, date_list[i], v]  # Construct the parsed row data
+        allrow.append(row)  # Add the row data to the list of all rows
+    return allrow  # Return the list of parsed and converted rows
 
 def remake(df, item_no, value_header):
     '''
-    整理 table_source df 並回傳 DataFrame
+    Processes the DataFrame to clean and reorganize it, returning a new DataFrame with the desired format.
 
-    df : pd.read_html(table_source)
-    item_no : str  產品項目, ex: "020711", "020712" , "020714", "020742"
-    value_header :str 貿易資訊, ex: "ex_qty","im_qty","ex_val","im_val"
+    Parameters:
+    df (DataFrame): The DataFrame obtained from reading an HTML table using pd.read_html.
+    item_no (str): The product item number, e.g., "020711", "020712".
+    value_header (str): Trade information header, e.g., "ex_qty", "im_qty", "ex_val", "im_val".
+
+    Returns:
+    df2 (DataFrame): A DataFrame with columns ['country_a', 'country_b', 'item_no', 'date', value_header].
     '''
-    columns = ['country_a', 'country_b', 'item_no', 'date', value_header]
+    
+    columns = ['country_a', 'country_b', 'item_no', 'date', value_header]  # Define the new DataFrame's column names
 
-    records = []
-    for row_no in range(2, len(df)):  # 資料從第三行開始
-        allrow = parser_row_val(df, row_no, item_no)
+    records = []  # Initialize a list to hold all processed records
+    for row_no in range(2, len(df)):  # Start from the third row since the first two rows contain headers
+        allrow = parser_row_val(df, row_no, item_no)  # Parse each row in the DataFrame
         for row in allrow:
-            records.append(row)
+            records.append(row)  # Add each parsed row to the records list
 
-    df2 = pd.DataFrame.from_records(records, columns=columns)
-    return df2
-
+    df2 = pd.DataFrame.from_records(records, columns=columns)  # Create a new DataFrame from the records list
+    return df2  # Return the cleaned and reorganized DataFrame
 
 if __name__ == "__main__":
-    df = pd.read_pickle('./pickle/test.pickle')
-    df2 = remake(df, "020712", "im_qty")
-    print(df2)
+    df = pd.read_pickle('./pickle/test.pickle')  # Load a DataFrame from a pickle file
+    df2 = remake(df, "020712", "im_qty")  # Process the DataFrame for a specific product item and value header
+    print(df2)  # Print the resulting DataFrame
