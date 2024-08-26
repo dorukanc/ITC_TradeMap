@@ -34,29 +34,16 @@ class TradeSpider(object):
     
     #Method to login to trademap.org
     def login(self, ac, pw):
-        url = "https://www.trademap.org/Country_SelProduct_TS.aspx"  # Target URL
-        self.driver.get(url)  # Load the webpage
+        # Navigate directly to the login URL
+        login_url = "https://www.trademap.org/Login.aspx"
+        self.driver.get(login_url)  # Load the login page directly
         wait = WebDriverWait(self.driver, 10)  # Set wait time for elements to load
-        
-        # Click the login button to navigate to the login page using the new XPath
-        logging.debug("Attempting to click login button to go to login page.")
-        login_button = wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, '/html/body/form/div[3]/div[5]/ul/li/a')
-            )
-        )
-        
-        # Try using JavaScript to click if normal click does not work
-        self.driver.execute_script("arguments[0].click();", login_button)
 
-        # Wait for the URL to change to the login page
-        wait.until(EC.url_contains("idserv.marketanalysis.intracen.org"))
-
-        # Verify the login page loaded
+        # Verify the login page loaded correctly
         current_url = self.driver.current_url
-        logging.debug(f"Current URL after clicking login: {current_url}")
+        logging.debug(f"Current URL after navigating to login: {current_url}")
         
-        if "idserv.marketanalysis.intracen.org" not in current_url:
+        if "Login.aspx" not in current_url:
             logging.error(f"Login page did not load correctly. Current URL: {current_url}")
             return
 
