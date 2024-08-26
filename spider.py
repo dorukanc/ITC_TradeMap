@@ -19,10 +19,10 @@ class TradeSpider(object):
     def setDriver(self):
         self.driver = webdriver.PhantomJS()  # Initialize the PhantomJS driver
         # Uncomment the below code to use Firefox with headless options
-        # options = Options()
-        # options.add_argument("--headless")
-        # self.driver = webdriver.Firefox(
-        #     firefox_options=options, executable_path='./geckodriver')
+        options = Options()
+        options.add_argument("--headless")
+        self.driver = webdriver.Firefox(
+        firefox_options=options, executable_path='./geckodriver')
 
     # Method to log in to the website
     def login(self, ac, pw):
