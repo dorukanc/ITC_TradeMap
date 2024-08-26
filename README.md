@@ -1,84 +1,111 @@
 # ITC_TradeMap
 
-1. 爬蟲
-2. 解析HTML
-3. 將資料整理轉成Json 
-4. 在GCP APP Engine 上部署API
+This project is a fork of the original project by Ponggung.
 
-## 主程式
-Step | Work | Code
----|:---:|---
-1|爬蟲|spider.py
-2|解析 HTML|parser.py
-3|DataFrame 格式轉換成json| toJson.py
+1. Web Scraping
+2. HTML Parsing
+3. Converting Data to JSON Format
+4. Deploying the API on GCP App Engine
 
+## Main Program
 
-## 爬蟲
-- 目標網站: https://www.trademap.org/Country_SelProduct_TS.aspx   
-- 網站敘述: ITC Trade Map 資料庫, 包含世界各國的農產品進出口紀錄   
-- 爬蟲要求: 下載特定品項的每月進出口值、量  
+| Step | Work Description                   | Code       |
+|------|------------------------------------|------------|
+| 1    | Web Scraping                       | spider.py  |
+| 2    | HTML Parsing                       | parser.py  |
+| 3    | Convert DataFrame Format to JSON   | toJson.py  |
+
+## Web Scraping
+
+- **Target Website**: [ITC Trade Map](https://www.trademap.org/Country_SelProduct_TS.aspx)
+- **Website Description**: ITC Trade Map database contains import and export records of agricultural products from various countries around the world.
+- **Scraping Requirements**: Download monthly import and export values and volumes for specific items.
+
 1. Use Python Selenium package  
-2. 登入會員才能選取到題目要求的品項
+2. Login is required to select the items needed for the task
 
-(1) Products = [
-"020711 - Fresh or chilled fowls of the species Gallus domesticus, not cut in pieces" "020712 - Frozen fowls of the species Gallus domesticus, not cut in pieces" "020714 - Frozen cuts and edible offal of fowls of the species Gallus domesticus" "040700 - Birds' eggs, in shell, fresh, preserved or cooked"]
-(2) Countries = "World"
-(3) Records = ["Exports", "Imports"]
-(4) Timeseries = "Monthly time series"
-(5) Indicators = ["Values", "Quantities"]
-(6) Time Period (number of columns) = "20 per page"
-(7) Rows per page = "300 per page"
-(8) ...其餘為網站預設值
+### Specific Settings for Scraping:
+
+1. **Products**:
+   - "020711 - Fresh or chilled fowls of the species Gallus domesticus, not cut in pieces"
+   - "020712 - Frozen fowls of the species Gallus domesticus, not cut in pieces"
+   - "020714 - Frozen cuts and edible offal of fowls of the species Gallus domesticus"
+   - "040700 - Birds' eggs, in shell, fresh, preserved or cooked"
+
+2. **Countries**: "World"
+
+3. **Records**: ["Exports", "Imports"]
+
+4. **Time Series**: "Monthly time series"
+
+5. **Indicators**: ["Values", "Quantities"]
+
+6. **Time Period (number of columns)**: "20 per page"
+
+7. **Rows per page**: "300 per page"
+
+8. All other settings use default website values.
 
 ![web](img/web.png)  
 ![df](img/df.png)
 
-## Install
-```
+## Installation
+
+```bash
 sudo pip install -r requirement.txt
 ```
-## Web Driver
-- firefox 64.0, geckodriver v0.23.0  
 
-需要安裝相對應OS的driver與firefox，這邊裝的是mac版 geckodriver有要求相對應firefox 的版本與 Selenium的版本，通常是最新的就比較沒有問題
-```
+## Web Driver
+
+- **Firefox 64.0**, **Geckodriver v0.23.0**  
+  You need to install the driver and Firefox version corresponding to your OS. In this example, the macOS version is installed. The version of Geckodriver must match the Firefox version and Selenium version. Usually, the latest versions work well together.
+
+```bash
 wget https://github.com/mozilla/geckodriver/releases/download/v0.23.0/geckodriver-v0.23.0-macos.tar.gz
 tar -zxvf geckodriver-v0.23.0-macos.tar.gz
 ```
 
-- phantomjs 2.1.1
+- **PhantomJS 2.1.1**  
+  Use Anaconda to install PhantomJS:
 
-使用anaconda 的安裝套件安裝
-```
+```bash
 conda install -y -c conda-forge phantomjs
 ```
 
 ## Docker
-```
+
+```bash
 docker build -t itc_trade_spider:latest -f Dockerfile .
 docker run itc_trade_spider
 ```
 
-## Quick test
-```
+## Quick Test
+
+```bash
 python spider.py
 python parser.py
 python toJson.py
 check.ipynb
 ```
-## GCP API 
-https://itc-map-result.appspot.com/map_result
 
-## Run
-```
+## Run the Program
+
+```bash
 python run.py
 ```
+
 ![log](img/log.png)
 
 ## Output
+
+The program will generate the following output files:
+
 ```
 df_all.pickle
 map_result.json
 ```
-![json](img/json.png)
 
+![json](img/json.png)
+```
+
+This `README.md` file provides an overview of the project, instructions for installation and setup, and details on how to run and test the code. It also includes comments translated into English for better understanding.
