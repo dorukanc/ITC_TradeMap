@@ -33,45 +33,64 @@ class TradeSpider(object):
         self.driver = webdriver.Firefox(service=service, options=options)
     
     #Method to login to trademap.org
-    def login(self, ac, pw):
-        # Navigate directly to the login URL
-        login_url = "https://www.trademap.org/Login.aspx"
-        self.driver.get(login_url)  # Load the login page directly
-        wait = WebDriverWait(self.driver, 10)  # Set wait time for elements to load
+   def login(self, ac, pw):
+        # Step 1: Navigate to the initial page
+        initial_url = "https://www.trademap.org/Country_SelProduct_TS.aspx"
+        self.driver.get(initial_url)
+        wait = WebDriverWait(self.driver, 20)
 
-        # Verify the login page loaded correctly
-        current_url = self.driver.current_url
-        logging.debug(f"Current URL after navigating to login: {current_url}")
-        
-        if "Login.aspx" not in current_url:
-            logging.error(f"Login page did not load correctly. Current URL: {current_url}")
+        # Step 2: Click the login button to navigate to the login page
+        try:
+            logging.debug("Attempting to click the initial login button.")
+            login_button = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/form/div[3]/div[5]/ul/li/a')))
+            login_button.click()
+        except TimeoutException:
+            logging.error("Initial login button not found or not clickable.")
             return
 
-        # Fill in the username and password fields
-        logging.debug("Attempting to enter username and password.")
-        wait.until(EC.presence_of_element_located((By.ID, 'Username'))).send_keys(ac)
-        wait.until(EC.presence_of_element_located((By.ID, 'Password'))).send_keys(pw)
-        
-        # Click the login button
-        logging.debug("Attempting to click login button to submit credentials.")
-        wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//button[@name='button' and @value='login']"))
-        ).click()
+        # Step 3: Wait for the login page to load
+        try:
+            logging.debug("Waiting for the login page to load.")
+            wait.until(EC.url_contains("idserv.marketanalysis.intracen.org/Account/Login"))
+        except TimeoutException:
+            logging.error("Login page did not load correctly. Current URL: {self.driver.current_url}")
+            return
 
-        # Wait for page to load and check login status
-        WebDriverWait(self.driver, 10).until(
-            lambda driver: driver.execute_script('return document.readyState') == 'complete'
-        )
+        # Step 4: Enter username and password on the login page
+        try:
+            logging.debug("Entering username and password.")
+            wait.until(EC.presence_of_element_located((By.ID, 'Username'))).send_keys(ac)
+            wait.until(EC.presence_of_element_located((By.ID, 'Password'))).send_keys(pw)
+        except TimeoutException:
+            logging.error("Username or password fields not found on login page.")
+            return
 
-        # Check if the login was successful by inspecting the page title
+        # Step 5: Click the login button on the login page
+        try:
+            logging.debug("Attempting to click the login button on the login page.")
+            login_submit_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@name='button' and @value='login']")))
+            login_submit_button.click()
+        except TimeoutException:
+            logging.error("Login submit button not found or not clickable.")
+            return
+
+        # Step 6: Wait for the redirection back to the TradeMap page
+        try:
+            logging.debug("Waiting for redirection back to the TradeMap page.")
+            wait.until(EC.url_contains("trademap.org"))
+        except TimeoutException:
+            logging.error(f"Redirection back to TradeMap failed. Current URL: {self.driver.current_url}")
+            return
+
+        # Step 7: Check if the login was successful
         soup = bs(self.driver.page_source, "lxml")
         page_title = soup.title.text if soup.title else "No Title"
         logging.debug(f"Page title after login attempt: {page_title}")
-        
+
         if "Trade Map" in page_title:
             logging.info("ITC login success!")  # Log successful login
         else:
-            logging.error("login failed")  # Log failed login
+            logging.error("Login failed.")  # Log failed login
 
     # Method to select the type of record (Exports or Imports)
     def setRecords(self, n):
