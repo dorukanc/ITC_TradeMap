@@ -1,5 +1,5 @@
-# Use Python 3.7 as base image
-FROM python:3.7-slim
+# Use Python 3.8-slim as base image to avoid compatibility issues
+FROM python:3.8-slim
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
@@ -11,6 +11,10 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     firefox-esr \
     build-essential \
+    gcc \
+    gfortran \
+    libatlas-base-dev \
+    libgfortran5 \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,8 +28,8 @@ RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.35.0/geckod
 # Copy the project source code from the local host to the filesystem of the container
 COPY . .
 
-# Install Python dependencies from requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip and install Python dependencies from requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Define environment variable
 ENV NAME=app
