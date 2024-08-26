@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -23,41 +24,57 @@ class TradeSpider(object):
         options.add_argument("--headless")  # Run Firefox in headless mode
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        
-        # Use the local path for geckodriver
-        geckodriver_path = './geckodriver'  # Path is relative to the current directory
+       
+        # Specify the path to geckodriver using the Service object
+        service = Service('./geckodriver')
 
         # Initialize Firefox WebDriver with headless options
-        self.driver = webdriver.Firefox(options=options, executable_path=geckodriver_path)
-
-    # Method to log in to the website
+        self.driver = webdriver.Firefox(service=service, options=options)
+    
+    #Method to login to trademap.org
     def login(self, ac, pw):
         url = "https://www.trademap.org/Country_SelProduct_TS.aspx"  # Target URL
         self.driver.get(url)  # Load the webpage
         wait = WebDriverWait(self.driver, 10)  # Set wait time for elements to load
-        # Click the login button
+        
+        # Click the login button to navigate to the login page
+        logging.debug("Attempting to click login button to go to login page.")
         wait.until(
             EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="ctl00_MenuControl_Label_Login"]'))).click()
-        # Switch to the login iframe
-        wait.until(
-            EC.frame_to_be_available_and_switch_to_it('iframe_login'))
-        # Enter the username
-        wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="PageContent_Login1_UserName"]'))).send_keys(ac)
-        # Enter the password
-        wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="PageContent_Login1_Password"]'))).send_keys(pw)
-        # Click the login button
-        self.driver.find_element(By.XPATH,
-            '//*[@id="PageContent_Login1_Button"]').click()
+                (By.XPATH, '//*[@id="ctl00_MenuControl_Label_Login"]')
+            )
+        ).click()
 
-        # Check if the login was successful
-        self.driver.switch_to.default_content()
+        # Verify the login page loaded
+        current_url = self.driver.current_url
+        logging.debug(f"Current URL after clicking login: {current_url}")
+        
+        if "IdentityServer4" not in current_url:
+            logging.error("Login page did not load correctly.")
+            return
+
+        # Fill in the username and password fields
+        logging.debug("Attempting to enter username and password.")
+        wait.until(EC.presence_of_element_located((By.ID, 'Username'))).send_keys(ac)
+        wait.until(EC.presence_of_element_located((By.ID, 'Password'))).send_keys(pw)
+        
+        # Click the login button
+        logging.debug("Attempting to click login button to submit credentials.")
+        wait.until(
+            EC.element_to_be_clickable((By.XPATH, "//button[@name='button' and @value='login']"))
+        ).click()
+
+        # Wait for page to load and check login status
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.execute_script('return document.readyState') == 'complete'
+        )
+
+        # Check if the login was successful by inspecting the page title
         soup = bs(self.driver.page_source, "lxml")
-        if "Trade Map" in soup.title.text:
+        page_title = soup.title.text if soup.title else "No Title"
+        logging.debug(f"Page title after login attempt: {page_title}")
+        
+        if "Trade Map" in page_title:
             logging.info("ITC login success!")  # Log successful login
         else:
             logging.error("login failed")  # Log failed login
