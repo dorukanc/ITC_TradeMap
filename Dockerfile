@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
     firefox-esr \
+    build-essential \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
@@ -27,7 +28,7 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Define environment variable
-ENV NAME app  
+ENV NAME=app
 
 # Run the application
 CMD [ "python", "run.py" ]
