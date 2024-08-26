@@ -34,38 +34,41 @@ options = [[3, 10, 10], [4], [5], [1, 5, 12, 10]]  # Options for selecting diffe
 
 # Initialize the web scraper (spider)
 s = spider.TradeSpider()
-s.setDriver()  # Set up the web driver for automation
-s.login(ac, pw)  # Log in using the provided credentials
-s.setTimePage()  # Set up the time page for data collection
 
-# Initialize product index
-p = 0
+try:
+    s.setDriver()  # Set up the web driver for automation
+    s.login(ac, pw)  # Log in using the provided credentials
+    s.setTimePage()  # Set up the time page for data collection
 
-# Loop through products and scrape data
-for index, o in enumerate(options):
-    for n in o:
-        s.selectProducts(n)  # Select the product based on the options provided
+    # Initialize product index
+    p = 0
 
-    # Loop through records and indicators to scrape data
-    for r in Records:
-        for i in Indicators:
+    # Loop through products and scrape data
+    for index, o in enumerate(options):
+        for n in o:
+            s.selectProducts(n)  # Select the product based on the options provided
 
-            # Set records and indicators in the scraper
-            s.setRecords(r)
-            s.setIndicators(i)
-            s.save(pdir + str(p))  # Save the scraped data as a pickle file
+        # Loop through records and indicators to scrape data
+        for r in Records:
+            for i in Indicators:
 
-            # Load and parse the saved data
-            df = pd.read_pickle(pdir + str(p) + '.pickle')  # Load the data as a pandas DataFrame
-            value_header = "{}_{}".format(recs[r-1], inds[i-1])  # Create a header for the values based on the record and indicator
-            item = products[index]  # Get the current product code
+                # Set records and indicators in the scraper
+                s.setRecords(r)
+                s.setIndicators(i)
+                s.save(pdir + str(p))  # Save the scraped data as a pickle file
 
-            # Parse and reformat the data using the remake function
-            re_df = remake(df, item, value_header)
-            re_df.to_pickle(pdir + str(p) + '.pickle')  # Save the parsed data as a pickle file
-            p += 1  # Increment the product index
+                # Load and parse the saved data
+                df = pd.read_pickle(pdir + str(p) + '.pickle')  # Load the data as a pandas DataFrame
+                value_header = "{}_{}".format(recs[r-1], inds[i-1])  # Create a header for the values based on the record and indicator
+                item = products[index]  # Get the current product code
 
-s.close()  # Close the web scraper
+                # Parse and reformat the data using the remake function
+                re_df = remake(df, item, value_header)
+                re_df.to_pickle(pdir + str(p) + '.pickle')  # Save the parsed data as a pickle file
+                p += 1  # Increment the product index
+
+finally:
+    s.close()  # Ensure that the web scraper is closed properly
 
 # Merge and concatenate the data
 
