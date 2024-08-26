@@ -61,8 +61,8 @@ sudo pip install -r requirement.txt
   You need to install the driver and Firefox version corresponding to your OS. In this example, the macOS version is installed. The version of Geckodriver must match the Firefox version and Selenium version. Usually, the latest versions work well together.
 
 ```bash
-wget https://github.com/mozilla/geckodriver/releases/download/v0.23.0/geckodriver-v0.23.0-macos.tar.gz
-tar -zxvf geckodriver-v0.23.0-macos.tar.gz
+wget wget https://github.com/mozilla/geckodriver/releases/download/v0.35.0/geckodriver-v0.35.0-macos.tar.gz
+tar -zxvf geckodriver-v0.35.0-macos.tar.gz
 ```
 
 - **PhantomJS 2.1.1**  
